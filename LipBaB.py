@@ -1,6 +1,11 @@
 #!/usr/bin/env python
 # coding: utf-8
 
+non_feasible_counter = 0
+ffilter_counter= 0
+dead_branches = []
+from numpy.linalg import norm
+
 # In[1]:
 
 
@@ -137,7 +142,7 @@ class LipNet:
     def __init__(self):
         self.Lub=0
         self.actvp=[]
-        self.ast_ns=deque()
+        self.ast_ns=deque()  #TS: ambiguous neurons
         self.H=[]
         self.t=0
         self.tev=[]
@@ -177,6 +182,7 @@ def lip_bound(p):
 #propagation of linear expressions for generation of half-space constraints
 
 def linprop(p):
+    #TS: eigentlich nur nörig wenn ein neues layer ohne star-neuronen fertiggestellt wurde
     l=p.t
     ev=p.tev
     while l<L:
@@ -199,9 +205,15 @@ def linprop(p):
 #reduces undecided-neurons to active/inactive-neurons
 
 def ffilter(p):
+    global non_feasible_counter
+    global ffilter_counter 
+    tilde_l = 1000 #TS: only temprorary´var, for debugging
+    if len(p.ast_ns) >0:
+        tilde_l = p.ast_ns[0][0] # TS: created fixed layer of first ambiguous neuron
     A,b=deepcopy(p.H[0]),deepcopy(p.H[1])
-    while len(p.ast_ns)>0:
-        l,i=p.ast_ns[0][0],p.ast_ns[0][1]
+    while len(p.ast_ns)>0:  #TS: while there are still ambiguous neurons
+        ffilter_counter +=1
+        l,i=p.ast_ns[0][0],p.ast_ns[0][1] #TS: get layer and index of first ambiguous neuron
         A.append(p.tev[0][i].tolist())
         b.append(-p.tev[1][i])
         sol=solvers.lp(matrix([0.0]*len(X)),matrix(np.array(A)),matrix(b),solver='glpk',options={'glpk':{'msg_lev':'GLP_MSG_OFF'}})
@@ -211,6 +223,7 @@ def ffilter(p):
             linprop(p)
             A.pop()
             b.pop()
+            non_feasible_counter +=1
             continue
         A.pop()
         b.pop()
@@ -223,6 +236,7 @@ def ffilter(p):
             linprop(p)
             A.pop()
             b.pop()
+            non_feasible_counter +=1
             continue
         A.pop()
         b.pop()
@@ -237,6 +251,7 @@ def ffilter(p):
 def branch(p,sgn):
     global pcnt
     global glb
+    global dead_branches
     l,i=p.ast_ns[0][0],p.ast_ns[0][1]    
     A,b=deepcopy(p.H[0]),deepcopy(p.H[1])
     A.append(-sgn*p.tev[0][i])
@@ -258,6 +273,9 @@ def branch(p,sgn):
         pq.put((-pb.Lub,pcnt,pb))
         if len(pb.ast_ns)==0:
             glb=max(glb,pb.Lub)
+    else: 
+        dead_branches.append(res["status"])
+        raise(ValueError("Non feasible set"))
 
 
 # In[11]:
@@ -267,6 +285,17 @@ def branch(p,sgn):
 
 wts=np.load('saved_networks/SDnet_(10,20,15,10,3)_weights.npy',allow_pickle=True)
 bs=np.load('saved_networks/SDnet_(10,20,15,10,3)_biases.npy',allow_pickle=True)
+
+
+#wts=np.load('saved_networks/SDnet_(10,30,30,30,3)_weights.npy',allow_pickle=True)
+#bs=np.load('saved_networks/SDnet_(10,30,30,30,3)_biases.npy',allow_pickle=True)
+
+#wts=np.load('saved_networks/SDnet_(10,15,10,3)_weights.npy',allow_pickle=True)
+#bs=np.load('saved_networks/SDnet_(10,15,10,3)_biases.npy',allow_pickle=True)
+
+#wts=np.load('saved_networks/iris_net_(4,5,5,3)_weights.npy',allow_pickle=True)
+#bs=np.load('saved_networks/iris_net_(4,5,5,3)_biases.npy',allow_pickle=True)
+
 
 #weights is a list of weight matrices
 #weights[0] must be NULL
@@ -398,4 +427,18 @@ print("Final Lipschitz estimation:", tp.Lub)
 execution_time = (time.time() - start_time)
 print('Execution time in seconds: ' + str(execution_time))
 
+
+#print(ffilter_counter)
+#print(non_feasible_counter)
+start_time = time.time()
+#TS: compare computed constant to layerwise approximation:
+layer_norms = [norm(matrix) for matrix in wts]
+norm = 1
+for layer_norm in layer_norms:
+    norm *= layer_norm
+layerwise_time = time.time() - start_time
+print("layerwise approximation = ", norm)
+print(f"Layerwise approximation took {layerwise_time} seconds")
+                    
+    
 
