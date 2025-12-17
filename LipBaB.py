@@ -122,7 +122,7 @@ def symprop():
                 act_pat[l][i]=[0,1]
                 ast_neurons.append([l,i])
                 ev[0]=np.hstack((ev[0], np.zeros((len(ev[0]), 1))))
-                ev[0][i]=np.zeros(len(ev[0][i]))
+                ev[0][i]=np.zeros(len(ev[0][i])) #TS: ev[0] is a matrix of shape (num_neurons_in_layer, num_inputs + num_ambiguous_neurons_so_far); a new column is added for each ambiguous neuron
                 ev[1][i]=0
                 ev[0][i][len(ev[0][i])-1]=1
                 var.append([0,ub])
@@ -283,19 +283,25 @@ def branch(p,sgn):
 
 #loading the network parameters (weights and biases) from .npy files
 
-wts=np.load('saved_networks/SDnet_(10,20,15,10,3)_weights.npy',allow_pickle=True)
-bs=np.load('saved_networks/SDnet_(10,20,15,10,3)_biases.npy',allow_pickle=True)
-
+#wts=np.load('saved_networks/SDnet_(10,20,15,10,3)_weights.npy',allow_pickle=True)
+#bs=np.load('saved_networks/SDnet_(10,20,15,10,3)_biases.npy',allow_pickle=True)
+#Final Lipschitz estimation: 40.05651016370293
+#Execution time in seconds: 1.5153298377990723
 
 #wts=np.load('saved_networks/SDnet_(10,30,30,30,3)_weights.npy',allow_pickle=True)
 #bs=np.load('saved_networks/SDnet_(10,30,30,30,3)_biases.npy',allow_pickle=True)
+#Final Lipschitz estimation: 19.462799793264388
+#Execution time in seconds: 35.51346802711487
 
 #wts=np.load('saved_networks/SDnet_(10,15,10,3)_weights.npy',allow_pickle=True)
 #bs=np.load('saved_networks/SDnet_(10,15,10,3)_biases.npy',allow_pickle=True)
+#Final Lipschitz estimation: 9.530716922306004
+#Execution time in seconds: 0.12319326400756836
 
 #wts=np.load('saved_networks/iris_net_(4,5,5,3)_weights.npy',allow_pickle=True)
 #bs=np.load('saved_networks/iris_net_(4,5,5,3)_biases.npy',allow_pickle=True)
-
+#Final Lipschitz estimation: 1.6780794807494919
+#Execution time in seconds: 0.0011038780212402344
 
 #weights is a list of weight matrices
 #weights[0] must be NULL
