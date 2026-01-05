@@ -112,6 +112,7 @@ def symprop():
             break
         for i in range(len(ev[0])):
             lb,ub=e_bounds(ev[0][i],ev[1][i])
+            #print(f"Layer {l} Neuron {i} bounds: [{lb}, {ub}]") #TS: debug print
             if lb>=0:
                 act_pat[l][i]=[1,1]
             elif ub<=0:
@@ -293,8 +294,8 @@ def branch(p,sgn):
 #Final Lipschitz estimation: 19.462799793264388
 #Execution time in seconds: 35.51346802711487
 
-#wts=np.load('saved_networks/SDnet_(10,15,10,3)_weights.npy',allow_pickle=True)
-#bs=np.load('saved_networks/SDnet_(10,15,10,3)_biases.npy',allow_pickle=True)
+wts=np.load('saved_networks/SDnet_(10,15,10,3)_weights.npy',allow_pickle=True)
+bs=np.load('saved_networks/SDnet_(10,15,10,3)_biases.npy',allow_pickle=True)
 #Final Lipschitz estimation: 9.530716922306004
 #Execution time in seconds: 0.12319326400756836
 
@@ -402,6 +403,8 @@ af=1 #approximation factor of choice
     
 #start
 symprop()
+print("Intial Star neurons:", ast_neurons)
+print("Variables after symprop:", var) #TS: debug print
 glb=0.0
 
 p=LipNet()
